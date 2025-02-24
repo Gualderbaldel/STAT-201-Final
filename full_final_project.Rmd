@@ -1,0 +1,480 @@
+---
+title: "Middlebury's Living and Sleep Habits"
+author: "Jackson Stone, Sebastian Pantzer, Ben Hughes"
+date: "2024-12-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r echo = F, message = FALSE, warning =FALSE}
+# hide all code
+knitr::opts_chunk$set(echo = FALSE)
+
+# set figure sizes globally
+knitr::opts_chunk$set(fig.width = 5, fig.height = 3)
+
+## load all your packages here
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(broom)
+library(openintro)
+library(kableExtra)
+```
+
+```{r echo = F, message = FALSE, warning =FALSE}
+myData <- read.csv("data.csv")
+
+#we made a separate data table that includes the proportions of people who responded to the incentivized and non-incentivized surveys 
+responseRateData <- read.csv("response_rate_data.csv")
+```
+
+## Introduction
+
+For our Stat 201 Final Project, we sought to answer 4 rather unrelated research Questions.
+
+**Question 1:**
+**Does living in a suite affect sleep?**
+
+We figured that most of the activity in residence halls on campus happen in suites because they allow for more space and people. With this preconception, we wondered if the students in suites get a different amount of sleep on average due to the increased activity. Our population of interest is the sophomore class here at Middlebury.
+
+**Question 2:**
+**Are people more likely to respond to a survey incentived with the possibility to**
+**win a $30 gift card than a non-incentivized survey?**
+
+We came up with this question while we were brainstorming effective ways to email surveys to students, in hopes to boost engagement. One of us thought to include a monetary prize sweepstakes to the survey, which led to a discussion about whether this would be effective or not. Consequently, this research question was born. Our population of interest is the sophomore class here at Middlebury. Ultimately, we will have two populations-- one population will answer the survey with the incentive while one population will answer the survey without such incentive. 
+
+
+**Question 3:**
+**Does drinking caffeinated beverages negatively affect sleep?**
+
+This question was developed during a wave of midterms. Obviously this is a time where people have a lot of work to do and might sacrifice sleep. With this in mind, we wondered if students that relied on caffeine had less sleep per night on average than students that did not rely on caffeine. To be clear, this data was not collected during said midterm season (that could skew data perhaps). Our population of interest is Middlebury Sophomores.
+
+**Question 4:**
+**Does Freshman Year housing location affect Sophomore Year housing location?**
+
+One of our members had the preconception that Battell Hall was the more "social" freshman year residence hall. However, another member disagreed. Therefore, we decided to see if students that lived in Battell Hall during freshman year are more likely to live in the Ross Complex their sophomore year than their counterparts that lived in other freshman year dorms. The Ross Complex is a group of dorms that is decidedly one of the more social residence halls given its connectedness and the prevalence of suites within. Our population of interest is Middlebury Sophomore Regs. We decided not to include Febs because they rarely live in Battell during their freshman year.
+
+
+## Data Collection
+
+We decided to sample our target populations for our research questions via simple random sampling. Our goal was to sample 200 sophomores, split them into two groups of 100 sophomores each for our incentive vs. no incentive survey question. We would then treat these two groups as one group when addressing the other research questions. We did this hoping that at least a third would respond. 
+
+To gather a random sample, we needed to acquire a comprehensive list of the sophomore class. However, as students we do not have access to such means. Therefore, we emailed the Dean of the Sophomore Experience, who then requested permission from the Director of Institutional Research to give us a comprehensive list. Ultimately, this pursuit was unsuccessful. So, we had to come up with another way to sample the Sophomore class. 
+
+Eventually, we landed on using the Middlebury '27 Snapchat group. This group features an alphabetical list of 393(at the time) Middlebury sophomores. We used R to create a vector of 200 indices sampled without replacement from the 393 indices. We then took the first 100 indices of the vector to create our incentive group, and took the last 100 indices to create the no incentive group. We did this so that the same person wouldn't be in both groups. After this, we went through the Middlebury '27 list and manually searched for the emails of the sampled students and added them to a group email, given their group (incentive/no incentive). We ended up sending the incentive survey to 90 sophomores, and the no incentive survey to 84 sophomores, where we received 67 total responses (32 and 35, respectively). 
+
+In the survey itself, we collected information on 8 variables.
+
+-   `Reg`: Categorical, "Yes" or "No", corresponding to if an observation is a Reg or Feb
+-   `Caffeinated.Drinks.per.Week`: Continuous Numerical, ex. 2, 4.5, 10.25, average number of caffeinated drinks per week
+-   `Hrs.Sleep.per.Night`: Continuous Numerical, ex. 6, 7.5, 9.25, number of hours of sleep per night on average
+-   `Number.of.Times.Woken.up`: Discrete Numerical, 1-5, number of times an observation wakes up at night
+-   `Battell`: Categorical, "Yes" or "No", whether an observation lived in Battell Hall or not during Freshman year
+-   `Ross`: Categorical, "Yes" or "No", whether an observation lives in Ross Complex or not currently
+-   `Suite`: Categorical, "Yes" or "No", whether an observation lives in a suite or not currently
+-   `Roommates.Suitemates`: Discrete Numerical, 0-6, how many roommates an observation is currently living with
+
+We acknowledge that there are several issues regarding our method of sampling. First and foremost, there may be defining characteristics among the sophomores in the Middlebury '27 Snapchat group that could be different from Middlebury sophomores as a whole. These differences could affect our sample data. For this project, we have to assume that the sophomores in the Middlebury '27 Snapchat group are representative of the Middlebury sophomore class as a whole. Also, there could be a difference in the characteristics of the people that answer the incentive survey vs. the people that answer the no incentive survey. However, we do not think that this is as likely. One issue that we accounted for was the fact that there are Febs in the Middlebury '27 Snapchat group. This would be detrimental to our research question regarding freshman year residence (febs don't usually live in Battell). We accounted for this by adding the `Reg` variable to our survey. Also, the two surveys were sent out at different times, one in the afternoon and one later in the evening. This could have affected response turnouts, given that the availability of participants could have changed between those times. Lastly, we couldn't find emails for all of our sampled sophomores, hence the group email numbers, 90 and 84. While we do not think this had any effect on our data, it potentially tarnished our random sample. Acknowledging these issues, we proceed with caution.
+
+**Question 1:**
+**Does living in a suite affect sleep?**
+
+In order to address this research question, we used the suite status variable as well as the average nightly sleep variable. We did not have to add any new variables or filter out observations in order to answer this research question. 
+
+****
+
+```{r echo = F, message = FALSE, warning =FALSE}
+#summary table
+summary_table_suite_sleep <- myData|>
+  group_by(Suite)|>
+  summarise(Count = length(Hrs.Sleep.per.Night), Mean.sleep = mean(Hrs.Sleep.per.Night), sd.sleep = sd(Hrs.Sleep.per.Night))
+kable(summary_table_suite_sleep)|>
+  kable_styling(latex_options = c("hold_position"))
+
+#extract values from table for reproducible code
+count_vec <- summary_table_suite_sleep|>
+  pull(Count)
+n_ns <- count_vec[1]
+n_s <- count_vec[2]
+
+mean_vec <- summary_table_suite_sleep|>
+  pull(Mean.sleep)
+mean_ns <- mean_vec[1]
+mean_s <- mean_vec [2]
+
+sd_vec <- summary_table_suite_sleep|>
+  pull(sd.sleep)
+sd_ns <- sd_vec[1]
+sd_s <- sd_vec[2]
+```
+
+We can see in the summary table that `r n_ns` of the people who responded to our surveys do not live in a suite while `r n_s` people live in a suite. The sample mean for average nightly sleep is `r mean_ns` hours for people who do not live in a suite and `r mean_s` hours for people who live in a suite with sample standard deviations of `r sd_ns` and `r sd_s`, respectively.
+
+We use a hypothesis test for difference in means to address the research question with a significance level of 0.1. Let $\mu_{ns}$ be the mean average nightly sleep for sophomores at Middlebury who do not live in a suite. Let $\mu_{s}$ be the mean average nightly sleep for sophomores at Middlebury who live in a suite. The null hypothesis is that $\mu_{ns}$ = $\mu_{s}$. The alternative hypothesis is that $\mu_{ns}$ $\neq$ $\mu_{s}$.
+
+The Middlebury sophomores selected to send the survey to were randomly sampled. We recognize that it is possible that our data are not fully independent. This would be the case if two roommates answered the survey or even if people who live in the same suite answer the survey. Roommates or suitemates are likely to be on a similar sleep schedule, or at least one roommate's sleep schedule will affect the other roommate's sleep schedule. We acknowledge this potential violation of independence and will proceed with caution. Since only `r n_s` of the people who answered the survey live in a suite, we need to visualize the data and analyze the visualization in order to determine whether conditions are met... 
+
+```{r echo = F, message = FALSE, warning =FALSE}
+myData|>
+  mutate(Suite_No_Suite = ifelse(Suite == "Yes", "Suite", "No Suite"))|>
+  ggplot(mapping = aes(x=Hrs.Sleep.per.Night))+
+  geom_histogram()+
+  labs(x="Average Nightly Sleep")+
+  facet_wrap(~ Suite_No_Suite)
+```
+
+Since the distribution for average nightly sleep appears approximately normal for both populations and neither distribution has outliers, the normality condition is met. We will use a CLT based test, but proceeed with caution because of the previously mentioned potential violation of independence. 
+
+
+
+**Question 2:**
+**Are people more likely to respond to a survey incentived with the possibility to win a $30 gift card than a non-incentivized survey?**
+
+In order to answer this research question, the only variable we used was whether or not someone responded to the survey. We did not need to create new variables or filter out any observations in order to address the question. 
+
+```{r echo = F, message = FALSE, warning =FALSE}
+responseVisualizationData <- read.csv("response_visualization_data.csv")
+
+responseVisualizationData|>
+  mutate(Incentive_No_Incentive = ifelse(Incentivized == "Yes", "Incentive", "No Incentive"))|>
+  ggplot(mapping = aes(x=Incentive_No_Incentive, fill=Response))+
+  geom_bar(position = "fill")+
+  labs(x="", title = " Proportion of Responses by Group", y = "Proportion")
+```
+
+We can see at first glance that a higher proportion of people answered the non-incentivized survey. We know that we will end up with a p value greater than 0.5 if we conduct a hypothesis test on our original question and fail to reject the null at any reasonable significance level. For this reason, we will conduct a hypothesis test to address the new question:
+
+**Are people less likely to respond to a survey incentived with the possibility to win a $30 gift card than a non-incentivized survey?**
+
+
+```{r echo = F, message = FALSE, warning =FALSE}
+kable(responseRateData)
+
+#extract values from summary table for reproducable code
+n_vec <- responseRateData|>
+  pull(People.sent.to)
+n_inc <- n_vec[1]
+n_ninc <- n_vec[2]
+
+responses_vec <- responseRateData|>
+  pull(Responses)
+responses_inc <- responses_vec[1]
+responses_ninc <- responses_vec[2]
+
+p_hat_vec <- responseRateData|>
+  pull(Proportion.of.responses)
+p_hat_inc <- p_hat_vec[1]
+p_hat_ninc <- p_hat_vec[2]
+```
+
+As we can see in the summary table, the incentivized survey was sent to `r n_inc` people while the non-incentivized survey was sent to `r n_ninc` people. `r responses_inc` people responded to the incentivized survey while `r responses_ninc` people responded to the non-incentivized survey. `r p_hat_inc*100` percent of people sent the incentivized survey filled it out while `r p_hat_ninc*100` percent of people sent the non-incentivized survey filled it out. 
+
+We use a hypothesis test for difference in proportions to address the (revised) research question with a significance level of 0.1. Let $p_{inc}$ be the true proportion of Middlebury sophomores who would respond to a survey with a 30 dollar gift card incentive. Let $p_{ninc}$ be the true proportion of Middlebury sophomores who would respond to a survey without any incentive. The null hypothesis is that $p_{inc}$ = $p_{ninc}$ and the alternative hypothesis is that $p_{inc}$ - $p_{ninc}$ < 0. 
+
+```{r echo = F, message = FALSE, warning =FALSE}
+p_hat_pooled <- (p_hat_inc*n_inc + p_hat_ninc*n_ninc)/(n_inc + n_ninc)
+
+#success conditions
+successes_i <- n_inc*p_hat_pooled
+successes_ni <- n_ninc*p_hat_pooled
+
+#failure conditions
+failures_i <- n_inc*(1-p_hat_pooled)
+failures_ni <- n_ninc*(1-p_hat_pooled)
+```
+
+If we want to use the CLT for our hypothesis test, we need to make sure that both the independence and the success-failure conditions are met. We randomly sampled people to send the incentivized and non incentivized surveys. We made sure not to send both surveys to the same person. We also made sure not to ask anybody specifically to fill out the survey because this would increase their chances of filling out the survey which would violate independence. There is a possibility that the independence condition was violated, for instance, if two friends received an email from us and one survey was incentivized and the other was not, the friend who received the incentivized survey might convince the friend who received the non-incentivized survey to not fill it out because of the lack of incentive. There is no way to know for sure if any of this discussion took place among our classmates, so we will proceed with caution. We use $\hat{p}_{pooled}$ = `r p_hat_pooled` to check the success-failure condition because in our null hypothesis we assume that the true proportions are the same.\
+$n_{inc} * \hat{p}_{pooled}$ = `r successes_i`\
+$n_{inc} * (1-\hat{p}_{pooled})$ = `r failures_i`\
+$n_{ninc} * \hat{p}_{pooled}$ = `r successes_ni`\
+$n_{ninc} * (1-\hat{p}_{pooled})$ = `r failures_ni`\
+All of these values are greater than 10, so the success-failure condition is met. We will use the CLT for our hypothesis test, but we will proceed with caution because of the potential violation of independence.
+
+**Question 3**
+**Does drinking caffeinated beverages negatively affect sleep?**
+```{r echo=F, message = F, warning = F}
+
+##Caffeinated bevs -> hrs sleep, threshold: 1 drink
+X <- 1
+data<-myData|>
+  filter(is.na(Hrs.Sleep.per.Night) == F)|>
+  filter(is.na(Caffeinated.Drinks.per.Week) == F)|>
+  mutate(aboveX = case_when(Caffeinated.Drinks.per.Week < X ~ "no",
+                            Caffeinated.Drinks.per.Week >= X ~ "Yes"))
+nQ3<- data|>
+  count()
+```
+We will assess the relationship between consuming caffeinated beverages and average hours slept per night. To answer this question, we will use the average caffeinated beverages consumed per week and average nightly sleep variables. Because not everyone that answered the survey answered every question, we must filter out the observations with `N/A` responses for these variables. After cleaning the data, we have a sample size of `r nQ3` observations. 
+
+We set a threshold of `r X` drink per week, thus making two populations: sophomores that drink less than `r X` drink per week and sophomores that drink at least `r X` drink per week. To reflect if an observation is above or below the threshold, we mutate a new variable, `aboveX`. `aboveX` evaluates to "yes" if average caffeinated beverages consumed per week is above `r X`, and "no" if otherwise.
+
+To visualize the relationship between average caffeinated beverages consumed per week and average hours slept per night, we will make a summary table, showing the average hours of sleep per night for each group.
+```{r echo = F, message=F, warning= F}
+summary_tableQ3 <- data|>
+  group_by(aboveX)|>
+  summarize(count = n(), `Mean sleep` = mean(Hrs.Sleep.per.Night), `Standard Deviation of Sleep`= sd(Hrs.Sleep.per.Night))
+
+kable(summary_tableQ3)
+
+overX<-data|>
+  filter(Caffeinated.Drinks.per.Week >= X)|>
+  select(Hrs.Sleep.per.Night)|>
+  pull()
+
+underX<-data|>
+  filter(Caffeinated.Drinks.per.Week < X)|>
+  select(Hrs.Sleep.per.Night)|>
+  pull()
+```
+
+Given the summary table, the mean average hours of nightly sleep is `r mean(underX)` for the people who drink less than 1 drink per week, while the mean average hours of nightly sleep is `r mean(overX)` for the people who drink at least 1 drink per week. Because the mean average nightly hours of sleep for sophomores that drink less than 1 caffeinated drink per week is higher, our collected data supports our intuition that drinking caffeinated beverages negatively impacts sleep.
+
+To assess whether there is a relationship between average caffeinated beverages consumed per week and average hours slept per night, we use a hypothesis test for a difference of population means using a mathematical model. Therefore, We must test CLT conditions for both populations.
+```{r echo = F, message=F, warning= F}
+
+data|>
+  filter(is.na(Caffeinated.Drinks.per.Week) == F)|>
+  filter(Caffeinated.Drinks.per.Week >= X)|>
+  select(Hrs.Sleep.per.Night)|>
+  ggplot(mapping = aes(x = Hrs.Sleep.per.Night))+
+  geom_histogram()+
+  labs(title = "Distribution of Average Nightly sleep for Caffeine Drinkers", x = "Average Hours of Sleep per Night")
+```
+
+```{r echo = F, message=F, warning= F}
+data|>
+  filter(is.na(Hrs.Sleep.per.Night) == F)|>
+  filter(is.na(Caffeinated.Drinks.per.Week) == F)|>
+  filter(Caffeinated.Drinks.per.Week < X)|>
+  select(Hrs.Sleep.per.Night)|>
+  ggplot(mapping = aes(x = Hrs.Sleep.per.Night))+
+  geom_histogram()+
+  labs(title = "Distribution of Average Nightly sleep for Non-Caffeine Drinkers", x = "Average Hours of Sleep per Night")
+```
+
+Normality: $n > 30$ for the caffeinated group. This population's histogram representing the distribution of average hours of sleep per night does not show any particularly extreme outliers. $n < 30$ non-caffeinated group. Because of this, we are required to be more strict when assessing outliers. However, there still seems to be no extreme outliers, per this population's histogram representing the distribution of average hours of sleep per night. Given that the histograms do not show any outliers, this condition passes. 
+
+Independence: Ignoring the possible issues with our data collection, we assume that the observations of the data have been randomly sampled. We also must assume that the none of the survey responses affected each other. Finally, we must assume that the fact that an observation was part of the incentive group has no effect on the observation's data aside from probability of response. Assuming all of this, we can assume that the CLT applies; the distribution of the sample means of average hours of sleep per night behaves normally.
+
+So, we will proceed with our hypothesis.
+
+Let $\mu_d = \mu_u - \mu_o$, where $\mu_u$ and $\mu_o$ are the mean average hours of sleep per night for the population that consumes under `r X` caffeinated drinks per week and the population that consumes at least `r X` caffeinated drinks per week, respectively. 
+
+Our null hypothesis is as follows:
+
+$h_0:$$\mu_d = 0$ 
+
+The alternative hypothesis is:
+
+$h_A:$$\mu_d > 0$. 
+
+For our significance level, $\alpha = 0.1$.
+
+**Question 4:** 
+**Does Freshman Year housing location affect Sophomore Year housing location?**
+
+We are questioning whether living in Battell as a freshman makes you more likely to live in the Ross Complex (Hadley or Millikan) as a sophomore. We developed this hypothesis based on the assumption that due to Battell's close quarters nature and large freshman population, it is a more social dorm. This, we believe, would potentially lead to more Battell residents living in Ross, which has a large amount of suite-type 3+ person living situations. 
+
+The variables we will be using to answer this question are as follows: "Battell", which is coded as "Yes" if the respondent lived in Battell as a freshman and "No" if not, and "Ross", which is coded as "Yes" if the respondent currently lives in the Ross Complex and "No" if not. The people who lived in other freshman dorms (Stewart, Hepburn, Allen) are designated as having a freshman year housing status of "other". 
+
+```{r echo =F, message = F, warning = F}
+data_regs<-myData|>
+  filter(Reg == "Yes")|>
+  mutate(fresh_dorm = if_else(Battell == "Yes", "Battell", "Other"))|>
+  mutate(Sophomore_Dorm = if_else(Ross == "Yes", "Ross", "Other"))
+
+n_battell<-data_regs|>
+  filter(Battell == "Yes")|>
+  count()|>
+  pull()
+
+n_other<-data_regs|>
+  filter(Battell == "No")|>
+  count()|>
+  pull()
+
+```
+
+In order to keep the data consistent, we will filter our data to only include Sophomores that started attending Middlebury in the Fall of 2023, designated as "Yes" in the "Reg" variable. We chose not to include the current sophomores that started attending Middlebury in Winter 2024, designated as "No" in the "Reg" variable. We chose to omit the February admits due to the fact that they lived almost exclusively in Forest Hall and did not have the chance of Living in Battell as Freshmen. After filtering out the Febs, we are left with `r n_battell` people who lived in Battell freshman year and `r n_other` people who did not live in Battell freshman year.
+
+```{r echo =F, message = F, warning = F}
+
+ggplot(data = data_regs, mapping = aes(x = fresh_dorm, fill = Sophomore_Dorm))+
+  geom_bar(position = "fill")+
+  labs(title = "Sophomore Dorm Based on Freshman Dorm", x = "", y="Proportion")
+
+```
+
+
+Above is a bar chart displaying the responses to our sampling regarding sophomore living situation. This bar chart is separated by freshman year residence status, showing the proportion in each group that currently lives in Ross. We can see from the bar chart that among those who lived in Battell freshman year, over 60% responded "yes" to living in Ross. Among those who lived in other dorms as freshmen, around 40% responded "yes" to living in Ross. This provides a basis of evidence for our hypothesis, which leads us into hypothesis testing for a more thorough analysis. 
+
+In order to test whether Battell residents are more likely to live in Ross when compared with residents of other freshman dorms, we will be doing a one-tailed hypothesis test for difference of proportions. We will be comparing $P_b$, which is the proportion of freshman year Battell residents that live in the Ross complex, and $P_o$, which is the proportion of freshmen that lived in other freshman dorms that live in the Ross complex. The direction of our difference will be $P_d$ = $P_b$ - $P_o$. To be able to do a hypothesis test using a mathematical model, we will need to check conditions. 
+
+First, we will check for independence within and between groups. Within groups, the individual respondents to our survey were sampled randomly, and therefore each response result has no bearing in determining the freshman year living situation of other respondents in the group, as freshman year residence status was determined randomly by the school. Between groups, a respondent can either have been a Battel resident or an "Other" resident, and there is no overlap or correlation between the two groups. Therefore, the data is independent within and between groups. 
+
+
+```{r echo =F, message = F, warning = F}
+n_battell<-data_regs|>
+  filter(Battell == "Yes")|>
+  count()|>
+  pull()
+
+n_battell_ross<-data_regs|>
+  filter(Battell == "Yes", Ross == "Yes")|>
+  count()|>
+  pull()
+
+n_other<-data_regs|>
+  filter(Battell == "No")|>
+  count()|>
+  pull()
+
+n_other_ross<-data_regs|>
+  filter(Battell == "No", Ross == "Yes")|>
+  count()|>
+  pull()
+
+n_total_regs<-data_regs|>
+  count()|>
+  pull()
+
+p_battell_obs = n_battell_ross / n_battell
+p_other_obs = n_other_ross / n_other
+
+p_pooled_ross = (n_battell_ross + n_other_ross) / n_total_regs
+
+sf_1 <- p_pooled_ross*n_battell
+sf_2 <- (1-p_pooled_ross)*n_battell
+sf_3 <- p_pooled_ross*n_other
+sf_4 <- (1-p_pooled_ross)*n_other
+
+
+
+
+
+```
+Secondly, we will check the success/failure condition.
+We will determine whether $\hat{p}_{pooled}$ = `r p_pooled_ross` and its complement multiplied by n is greater than 10 for each housing group. 
+
+The results of our success/failure test are `r sf_1`, `r sf_2`,  `r sf_3`,  `r sf_4`, which are all greater than 10, meaning that this hypothesis test passes the success/failure condition and we can proceed with inference. 
+Our hypotheses are as follows:
+$H_{0}$: $P_{b}$ - $P_{o}$ = 0
+$H_{1}$:$P_{b}$ - $P_{o}$ > 0
+
+Significance level: $\alpha$ = 0.1
+
+## Results
+
+**Question 1:**
+```{r echo = F, message = FALSE, warning =FALSE}
+#HT for question: Does living in a suite affect sleep?
+#Difference of means
+
+#conditions checked in methods section
+
+#means calculated in methods section
+mean_sleep_no_suite <- mean_ns
+mean_sleep_suite <- mean_s
+
+#sample standard deviations calculated in methods section
+s_suite <- sd_s
+
+s_no_suite <- sd_ns
+
+#calculate t
+t_suite_sleep = (mean_sleep_no_suite - mean_sleep_suite)/sqrt(s_suite^2/n_s + s_no_suite^2/n_ns)
+
+#p value for two tailed test
+p_val_suite_sleep <- 2*(pt(t_suite_sleep, min(n_s-1, n_ns-1)))
+
+```
+
+We calculated a p value of `r p_val_suite_sleep` for the hypothesis test described in the methods section. Since our p value is less than our significance level of 0.1, we reject the null. There is statistically significant evidence that suite status affects average nightly sleep among sophomores at Middlebury. 
+
+
+**Question 2**
+
+```{r echo = F, message = FALSE, warning =FALSE}
+#HT for questions: are people more likely to fill out a survey when a $30 gift card incentive is included? 
+#Difference of proportions
+
+#H_0: p_i = p_ni
+#H_A: p_i < p_ni or p_i - p_ni < 0
+
+#conditions checked in methods section
+
+z_incentive_response = (p_hat_inc-p_hat_ninc) / sqrt((p_hat_pooled*(1-p_hat_pooled)/n_inc) + (p_hat_pooled*(1-p_hat_pooled)/n_ninc))
+
+p_val_incentive_response <- (pnorm(z_incentive_response))
+```
+
+We calculated a p value of `r p_val_incentive_response` for the hypothesis test described in the methods section. Since our p value is greater than our significance level of 0.1, we fail to reject the null. Middlebury sophomores are not less likely to respond to a survey when a $30 gift card incentive is included.
+
+**Question 3**
+```{r echo = F, message=F, warning= F}
+seU<-sd(underX)/sqrt(length(underX))
+seO<-sd(overX)/sqrt(length(overX))
+seHat<-sqrt((seU*seU) + (seO*seO))
+ts<-(mean(underX)-mean(overX))/seHat
+
+pvalQ3 = 1-pt(ts, df = min(length(underX),length(overX)))
+```
+Our p-value is `r pvalQ3`. Because our p-value is higher than our significance level, $\alpha = .1$, we fail to reject the null hypothesis. There is not significant evidence that suggests that drinking at least 1 caffeinated beverage per week negatively affects average hours of sleep per night.
+
+**Question 4**
+```{r echo =F, message = F, warning = F}
+point_estimate_ross <- p_battell_obs - p_other_obs
+null_val_ross <- 0
+se_ross <- sqrt((p_pooled_ross*(1-p_pooled_ross))/n_battell + (p_pooled_ross*(1-p_pooled_ross))/n_other)
+
+test_stat_ross <- (point_estimate_ross - null_val_ross)/se_ross
+
+pval_ross <- 1-pnorm(test_stat_ross, 0, 1)
+
+```
+Regarding the results of this hypothesis test, using an alpha level of 0.1 we see statistical significance, as our p-value of `r pval_ross` was less than 0.1. Due to this, we can reject the null hypothesis $H_{0}$: $P_{b}$ - $P_{o}$ = 0. There is statistically significant evidence that freshman year Battell residents are more likely to live in the Ross complex as sophomores. 
+A caveat of this testing is that it was done with a relatively high significance level for a one-tailed hypothesis test, so results should be taken with an air of caution. 
+
+
+## Discussion
+
+**1.**
+
+**Does Living in a Suite Affect Sleep?**\
+Yes! (according to our hypothesis test)\
+We were quite surprised that people in suites slept on average about a half an hour more than people not in suites. This was opposite of what we expected. We suspected that people in suites would have a hard time going to bed at a reasonable hour for a variety of reasons. There is often loud music in suites, people might be tempted to hang out with their friends in the suite instead of going to bed, and commotion in the common area of the suite can also make it hard for people in suites to get to bed. However, our intuition was wrong which is interesting and surprising.  
+
+**Are people more likely to respond to a survey incentived with the possibility to win a $30 gift card than a non-incentivized survey?**\
+No! (because a higher proportion responded to the non-incentivized survey)\
+This was a surprising result to us. We did not necessarily expect to find statistically significant results here, but we certainly did not expect a greater proportion of people to respond to the non-incentivized survey. This result could be due to several things. People may have ignored our email with the incentivized survey thinking it looked like spam. More people may have been on their computers when we sent the non-incentivized survey earlier in the afternoon. Perhaps cash incentives just do not lead to more responses. We were also told after the fact by someone who received an email from us that our incentivized survey came off as desperate. 
+
+**So are people less likely to respond to a survey incentived with the possibility to win a $30 gift card than a non-incentivized survey?**\
+No! (based on our hypothesis test)\
+We were not surprised to fail to reject the null here. We would have been shocked if we found statistically significant evidence that cash incentives lead to less responses.
+
+
+**Does drinking caffeinated beverages negatively affect sleep**\
+No! (based on our hypothesis test)\
+We were not sure whether to expect to find statistically significant results here or not. We suspected that people who drink a lot of caffeine over the course of a week would not sleep as much as people who do not drink as much caffeine. Our results are not overly surprising. There are other factors that we do not take into account that we could have explored further like the time of day that people consume the caffeine. Maybe people who consume a lot of caffeine later in the day sleep less. This would have been an interesting spin on the research question.
+
+**Are Battell freshman more likely to live in Ross sophomore year?**\
+Yes! (bases on our hypothesis test)\
+We hypothesized that people who lived in Battell freshman year may be more likely to end up living in Ross sophomore year. Battell is known as the most social freshman dorm and there are many suites in Ross. We suspected that people living in Battell would socialize more than other freshman, meet people who they would like to live in a suite with, and end up living in Ross with the people they met in Battell. This was a long shot, but, we surprisingly ended up finding statistically significant results. 
+
+**2.**
+
+The first critique we have is the fact that the non-incentivized survey was sent at 3:36 pm on a Thursday, while the incentivized survey was sent about 4 hours later at 7:14 pm on that same day. This could lead to response bias because Middlebury students may be more likely to be on their computer at one of these two times. People are more likely to check an email that is fresh in their inbox. Since students may be more likely to be on their computers at one of the two times, and someone is more likely to fill out the survey right when they receive it, our data could have some response bias. 
+
+Another critique we have is regarding the way we obtained a random sample of sophomores to survey. We attempted to obtain an email list of the whole sophomore class. We were unsuccessful in doing so. We had to think of a creative way to get a random sample of sophomores without a class list or an email list. There is a group on Snapchat that contains 393 Middlebury sophomores. We took a random sample from this group in order to determine the people we would email. For this reason, the population we were sampling from is technically Middlebury sophomores in the Snapchat group. However, we are assuming that people in the group chat are more or less representative of Middlebury sophomores as a whole. 
+
+The last major critique we have is about the content of the survey that we sent out. For some background, on the survey we made a question multiple choice if the information being obtained was a categorical or discrete numerical variable. If the response to a question was continuous numerical, then we could not make it a multiple choice question because there are technically infinite possible answers. We determined that the response to "How many times do you typically wake up at night?" would be discrete numerical because you cannot wake up a fraction of a time. After we sent out the survey, we received several calls from friends telling us that they usually sleep through the night without waking up, and there was no 0 option for the question. This was not a major mistake, but it meant that we could not use the data from that particular question how we originally intended to. We actually ended up not using that question at all in our methods and results. 
+
+**3.**
+
+If we were able to start over with the project we would include more questions on our survey. Some of the research questions that we included in our methods and results section did not even cross our minds before we sent out the survey. For example, the question of whether or not suite status affects sleep was not on our radar before we sent the survey out. We just noticed that we had data on both things and decided to explore the question. Each multiple choice question on a survey might take the person taking the survey an additional 5 seconds, so adding a few more questions would not be a big burden. For this reason, we would have liked to include more questions on the survey so we would have more questions that we could explore after obtaining the data. 
+
+Two other things we would changed if we could start the project over would be in relation to the critiques we had in **2.**. We found out after sending out the surveys that you can actually schedule an email to send at a certain time. We would have liked to schedule the surveys to send at the same time on the same day. This way we would have similar levels of response bias for the incentivized and the incentivized surveys. We also would have included a 0 option for the "How many times do you typically wake up at night?" question. 
+
+
